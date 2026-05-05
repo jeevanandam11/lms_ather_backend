@@ -4,6 +4,7 @@ import com.example.lms_backend.model.TopicHistory;
 import com.example.lms_backend.model.UserEntity;
 import com.example.lms_backend.repository.TopicHistoryRepository;
 import com.example.lms_backend.repository.UserRepo;
+import com.example.lms_backend.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +26,9 @@ public class TopicHistoryController {
     @Autowired
     private UserRepo userRepo;
 
+    @Autowired
+    private NotificationService notificationService;
+
     @PostMapping("/save")
     public ResponseEntity<?> saveHistory(@RequestBody Map<String, Object> payload) {
         try {
@@ -43,6 +47,13 @@ public class TopicHistoryController {
             history.setPdfBase64(pdfBase64);
 
             TopicHistory saved = topicHistoryRepository.save(history);
+
+            notificationService.sendAndSaveNotification(
+                userOpt.get(),
+                "New Course Generated",
+                "Your interactive course on '" + topicName + "' has been successfully generated and saved to your library."
+            );
+
             return ResponseEntity.ok(Map.of("message", "History saved", "id", saved.getId()));
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Error saving history: " + e.getMessage());
