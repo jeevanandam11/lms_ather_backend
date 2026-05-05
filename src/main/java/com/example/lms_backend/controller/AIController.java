@@ -30,4 +30,12 @@ public class AIController {
         return response;
     }
 
+    @PostMapping("/updatePdf")
+    public Map<String, Object> updatePdf(@RequestBody Map<String, Object> data) throws Exception {
+        byte[] pdf = aiService.generatePDF(data);
+        Map<String, Object> response = new java.util.HashMap<>();
+        response.put("pdf", java.util.Base64.getEncoder().encodeToString(pdf));
+        return response;
+    }
+
 }

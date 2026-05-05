@@ -66,7 +66,9 @@ public class AIService {
         - Return ONLY JSON
         - Do NOT include any timestamps or time fields.
         - For headings of each topic, DO NOT use ### markdown. Use HTML <b> tags (e.g., <b>Heading Here</b>).
+        - For any 'summary' text, you MUST structure the content in detailed bullet points using HTML <ul> and <li> tags.
         - Break the lesson into many segments (at least 15 segments) to give a large amount of data.
+        - Ensure all related contents, sub-topics, and explanations are extracted and expanded upon fully every single time. Do not skip details.
         - include 'summary', 'code', or 'quote' types.
         - CRITICAL RULE: For any 'code' text, you MUST preserve line-by-line formatting and indentation! Do NOT output minified or single-line code. You MUST use explicit \\n newline escape characters within the JSON strings to break the code into readable lines (e.g., "public class Main {\\n    public static void main..." ).
 
@@ -76,7 +78,7 @@ public class AIService {
           "timeline": [
             {
               "type": "summary | code | quote",
-              "text": ""
+              "text": "<b>Subtopic Heading</b><ul><li>Detailed point 1</li><li>Detailed point 2</li></ul>"
             }
           ],
           "suggestions": ["Follow-up topic 1", "Follow-up topic 2", "Follow-up topic 3"]
@@ -148,7 +150,7 @@ public class AIService {
         headers.setBearerAuth(groqApiKey);
 
         List<Map<String, String>> messages = new java.util.ArrayList<>();
-        messages.add(Map.of("role", "system", "content", "You are an AI learning assistant. At the absolute MUST-HAVE end of every response, provide exactly 3 suggested short follow-up questions formatted perfectly as: \\n\\nSUGGESTIONS: [\"Question 1\", \"Question 2\", \"Question 3\"]"));
+        messages.add(Map.of("role", "system", "content", "You are an AI learning assistant. You MUST format EVERY explanation, summary, and detail using HTML bullet points (<ul> and <li> tags). NEVER use plain text paragraphs. Always provide comprehensive, highly detailed answers, extracting all related concepts fully and exhaustively. At the absolute MUST-HAVE end of every response, provide exactly 3 suggested short follow-up questions formatted perfectly as: \\n\\nSUGGESTIONS: [\"Question 1\", \"Question 2\", \"Question 3\"]"));
         for (Map<String, Object> contentNode : contents) {
             String role = "user";
             if ("model".equals(contentNode.get("role"))) {
@@ -182,6 +184,42 @@ public class AIService {
                 return "Groq AI API quota exceeded (Rate Limit). Please wait around 60 seconds before asking the next question.";
             }
             return "Aether AI API Error: " + e.getStatusCode();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Internal Server Error: " + e.getMessage();
+        }
+    }
+
+    // INTERVIEW CHAT
+    public String generateInterviewResponse(List<Map<String, String>> messages) throws Exception {
+        RestTemplate restTemplate = new RestTemplate();
+        String url = GROQ_URL;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(groqApiKey);
+
+        Map<String, Object> body = Map.of(
+                "model", "llama-3.3-70b-versatile",
+                "messages", messages
+        );
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
+
+        try {
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, entity, Map.class);
+            Map<String, Object> responseBody = response.getBody();
+            
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> choices = (List<Map<String, Object>>) responseBody.get("choices");
+            @SuppressWarnings("unchecked")
+            Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
+            return (String) message.get("content");
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            System.err.println("GROQ API ERROR: " + e.getResponseBodyAsString());
+            if (e.getStatusCode() == org.springframework.http.HttpStatus.TOO_MANY_REQUESTS) {
+                return "Groq AI API quota exceeded. Please wait a moment before trying again.";
+            }
+            return "API Error: " + e.getStatusCode();
         } catch (Exception e) {
             e.printStackTrace();
             return "Internal Server Error: " + e.getMessage();
