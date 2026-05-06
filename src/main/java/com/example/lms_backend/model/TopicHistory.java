@@ -14,6 +14,9 @@ public class TopicHistory {
     @Column(columnDefinition="LONGTEXT")
     private String pdfBase64;
 
+    @Column(columnDefinition="LONGTEXT")
+    private String lessonData;
+
     private LocalDateTime createdAt;
     
     @PrePersist
@@ -35,6 +38,9 @@ public class TopicHistory {
 
     public String getPdfBase64() { return pdfBase64; }
     public void setPdfBase64(String pdfBase64) { this.pdfBase64 = pdfBase64; }
+
+    public String getLessonData() { return lessonData; }
+    public void setLessonData(String lessonData) { this.lessonData = lessonData; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

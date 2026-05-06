@@ -35,6 +35,7 @@ public class TopicHistoryController {
             Long userId = Long.valueOf(payload.get("userId").toString());
             String topicName = payload.get("topicName").toString();
             String pdfBase64 = payload.get("pdfBase64") != null ? payload.get("pdfBase64").toString() : "";
+            String lessonData = payload.get("lessonData") != null ? payload.get("lessonData").toString() : null;
 
             Optional<UserEntity> userOpt = userRepo.findById(userId);
             if (userOpt.isEmpty()) {
@@ -45,6 +46,7 @@ public class TopicHistoryController {
             history.setUser(userOpt.get());
             history.setTopicName(topicName);
             history.setPdfBase64(pdfBase64);
+            history.setLessonData(lessonData);
 
             TopicHistory saved = topicHistoryRepository.save(history);
 
@@ -76,6 +78,27 @@ public class TopicHistoryController {
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Error fetching history: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/get/{id}")
+    public ResponseEntity<?> getHistoryById(@PathVariable("id") Long id) {
+        try {
+            Optional<TopicHistory> historyOpt = topicHistoryRepository.findById(id);
+            if (historyOpt.isEmpty()) {
+                return ResponseEntity.badRequest().body("History not found");
+            }
+            TopicHistory h = historyOpt.get();
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", h.getId());
+            map.put("topicName", h.getTopicName());
+            map.put("pdfBase64", h.getPdfBase64());
+            map.put("lessonData", h.getLessonData());
+            map.put("createdAt", h.getCreatedAt().toString());
+            
+            return ResponseEntity.ok(map);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Error fetching history details: " + e.getMessage());
         }
     }
 

@@ -59,22 +59,25 @@ public class AIService {
         headers.setBearerAuth(groqApiKey);
 
         String prompt = """
-        Generate a comprehensive, highly detailed text lesson for the selected topic.
-        Provide a LARGE amount of educational content.
+        You are an expert AI tutor. Generate a comprehensive, highly detailed text lesson for the requested topic.
+        First, detect the intent of the topic (e.g., programming, aptitude, math, theory, history, general knowledge).
+        Adapt your response structure based on the topic type:
+        - If technical/programming: include code examples with explanations. Do NOT force Java unless explicitly requested.
+        - If aptitude/math: include formulas, step-by-step examples, and solved problems. Do NOT include code.
+        - If theory/history/biology/etc: include explanations, definitions, and structured content. Do NOT include code.
         
         Rules:
-        - Return ONLY JSON
+        - Return ONLY JSON format.
+        - Break the lesson into many segments (at least 10-15 segments) to give a large amount of data.
         - Do NOT include any timestamps or time fields.
-        - For headings of each topic, DO NOT use ### markdown. Use HTML <b> tags (e.g., <b>Heading Here</b>).
-        - For any 'summary' text, you MUST structure the content in detailed bullet points using HTML <ul> and <li> tags.
-        - Break the lesson into many segments (at least 15 segments) to give a large amount of data.
-        - Ensure all related contents, sub-topics, and explanations are extracted and expanded upon fully every single time. Do not skip details.
-        - include 'summary', 'code', or 'quote' types.
-        - CRITICAL RULE: For any 'code' text, you MUST preserve line-by-line formatting and indentation! Do NOT output minified or single-line code. You MUST use explicit \\n newline escape characters within the JSON strings to break the code into readable lines (e.g., "public class Main {\\n    public static void main..." ).
+        - For headings, DO NOT use markdown like ###. Use HTML <b> tags (e.g., <b>Heading Here</b>).
+        - For any 'summary' text, structure the content in detailed bullet points using HTML <ul> and <li> tags.
+        - The 'type' for each segment can be 'summary', 'code', or 'quote'. Use 'code' ONLY if the topic is actually programming.
+        - CRITICAL RULE: For 'code' text, you MUST preserve line-by-line formatting and indentation! Use explicit \\n newline escape characters within the JSON strings to break the code into readable lines.
 
         Format:
         {
-          "title": "",
+          "title": "Clear Title for the Lesson",
           "timeline": [
             {
               "type": "summary | code | quote",
